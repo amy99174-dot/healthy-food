@@ -1,0 +1,416 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>均衡飲食產生器 // 酸性設計版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,700&display=swap" rel="stylesheet">
+    <style>
+        /* * ACID DESIGN SYSTEM v2.0 
+         * 單色螢光配置
+         */
+        :root {
+            --acid-green: #ccff00;
+            --deep-black: #080808;
+            --grid-color: #1a1a1a;
+            --text-white: #f0f0f0;
+        }
+
+
+        body {
+            background-color: var(--deep-black);
+            font-family: 'Space Mono', 'Noto Sans TC', monospace;
+            color: var(--text-white);
+            overflow-x: hidden;
+            /* 酸性網格背景 */
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+
+        /* 銳利的邊框風格 */
+        .acid-border {
+            border: 1px solid var(--acid-green);
+            box-shadow: 4px 4px 0px var(--acid-green);
+            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+
+        .acid-border:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--acid-green);
+        }
+
+
+        /* 選中狀態：反相高亮 */
+        .selection-btn.active {
+            background-color: var(--acid-green);
+            color: black;
+            font-weight: 900;
+            box-shadow: 0 0 20px rgba(204, 255, 0, 0.4);
+        }
+
+
+        /* 跑馬燈動畫 */
+        .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+            background: var(--acid-green);
+            color: black;
+            font-weight: 900;
+            padding: 6px 0;
+            border-bottom: 1px solid white;
+            border-top: 1px solid white;
+        }
+
+
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+        }
+
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+
+        /* 結果顯示區塊的雜訊框 */
+        .glitch-box {
+            position: relative;
+            border: 1px dashed var(--acid-green);
+            background: rgba(204, 255, 0, 0.02);
+        }
+
+
+        .data-cell {
+            border-left: 2px solid var(--acid-green);
+            padding-left: 0.75rem;
+        }
+
+
+        /* 裝飾用模糊光暈 */
+        .blob {
+            position: absolute;
+            background: var(--acid-green);
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.2;
+            border-radius: 50%;
+        }
+
+
+        /* 隱藏捲軸但保留功能 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--deep-black); }
+        ::-webkit-scrollbar-thumb { background: var(--acid-green); }
+        
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.3) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+
+    <!-- 復古螢幕掃描線效果 -->
+    <div class="scanline"></div>
+
+
+    <!-- 跑馬燈 -->
+    <div class="marquee-container text-sm tracking-widest uppercase">
+        <div class="marquee-content">
+            /// 健康即財富 /// 拒絕垃圾食物 /// 系統正常運作 /// 營養均衡運算中 /// 你的身體是神殿 /// 請選擇優質燃料 /// 
+            /// 健康即財富 /// 拒絕垃圾食物 /// 系統正常運作 /// 營養均衡運算中 /// 你的身體是神殿 /// 請選擇優質燃料 /// 
+        </div>
+    </div>
+
+
+    <main class="flex-grow container mx-auto px-4 py-10 max-w-2xl relative z-10">
+        
+        <!-- 標題區 -->
+        <div class="mb-12 text-center relative">
+            <div class="blob w-48 h-48 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+            
+            <h1 class="text-5xl md:text-7xl font-black italic tracking-tighter leading-none mb-4">
+                <span class="text-white">飲食</span>
+                <span class="text-[var(--acid-green)]">演算</span>
+            </h1>
+            <div class="inline-flex items-center gap-2 border border-[var(--acid-green)] px-3 py-1 bg-black">
+                <div class="w-2 h-2 bg-[var(--acid-green)] rounded-full animate-pulse"></div>
+                <span class="text-[var(--acid-green)] text-xs tracking-[0.2em]">系統待命中</span>
+            </div>
+        </div>
+
+
+        <!-- 輸入表單 -->
+        <div class="space-y-8 bg-black/90 backdrop-blur p-6 border-l-4 border-[var(--acid-green)] relative shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+            
+            <!-- 步驟 1: 時間 -->
+            <div>
+                <h2 class="text-lg font-bold mb-4 flex items-center text-[var(--acid-green)]">
+                    <span class="bg-[var(--acid-green)] text-black w-6 h-6 flex items-center justify-center mr-2 font-black text-sm">1</span>
+                    選擇時段
+                </h2>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="selectTime('breakfast')" id="btn-breakfast" class="selection-btn acid-border py-3 text-sm md:text-base font-bold tracking-wider hover:bg-[var(--acid-green)] hover:text-black">早餐</button>
+                    <button onclick="selectTime('lunch')" id="btn-lunch" class="selection-btn acid-border py-3 text-sm md:text-base font-bold tracking-wider hover:bg-[var(--acid-green)] hover:text-black">午餐</button>
+                    <button onclick="selectTime('dinner')" id="btn-dinner" class="selection-btn acid-border py-3 text-sm md:text-base font-bold tracking-wider hover:bg-[var(--acid-green)] hover:text-black">晚餐</button>
+                </div>
+            </div>
+
+
+            <!-- 步驟 2: 來源 -->
+            <div>
+                <h2 class="text-lg font-bold mb-4 flex items-center text-[var(--acid-green)]">
+                    <span class="bg-[var(--acid-green)] text-black w-6 h-6 flex items-center justify-center mr-2 font-black text-sm">2</span>
+                    選擇來源
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <button onclick="selectSource('store')" id="btn-store" class="selection-btn border border-gray-600 p-3 hover:border-[var(--acid-green)] hover:text-[var(--acid-green)] transition-colors flex items-center justify-center gap-2">
+                        便利商店
+                    </button>
+                    <button onclick="selectSource('out')" id="btn-out" class="selection-btn border border-gray-600 p-3 hover:border-[var(--acid-green)] hover:text-[var(--acid-green)] transition-colors flex items-center justify-center gap-2">
+                        外食 / 小吃
+                    </button>
+                    <button onclick="selectSource('home')" id="btn-home" class="selection-btn border border-gray-600 p-3 hover:border-[var(--acid-green)] hover:text-[var(--acid-green)] transition-colors flex items-center justify-center gap-2">
+                        自己煮
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- 產生按鈕 -->
+            <button onclick="generateMenu()" class="w-full bg-white text-black font-black text-xl py-5 hover:bg-[var(--acid-green)] hover:scale-[1.02] transition-all border-2 border-transparent hover:border-white uppercase tracking-widest relative overflow-hidden group mt-4">
+                <span class="relative z-10">啟動菜單運算</span>
+            </button>
+        </div>
+
+
+        <!-- 結果顯示區 -->
+        <div id="result-container" class="hidden mt-8">
+            <!-- 裝飾標頭 -->
+            <div class="flex justify-between items-end mb-2 text-[10px] text-gray-500 font-mono uppercase">
+                <span>// Result_ID: <span id="result-id">--</span></span>
+                <span>Calculation_Complete</span>
+            </div>
+
+
+            <div class="glitch-box p-6 md:p-8">
+                <!-- 標籤 -->
+                <div class="flex gap-2 mb-4">
+                    <span class="bg-[var(--acid-green)] text-black text-xs px-2 py-0.5 font-bold" id="result-time-tag">早餐</span>
+                    <span class="border border-[var(--acid-green)] text-[var(--acid-green)] text-xs px-2 py-0.5" id="result-source-tag">便利商店</span>
+                </div>
+
+
+                <!-- 菜單名稱 -->
+                <h3 class="text-2xl md:text-3xl font-bold leading-snug mb-6 text-white" id="result-menu">
+                    <!-- JS填入內容 -->
+                </h3>
+
+
+                <!-- 分隔線 -->
+                <div class="h-px w-full bg-gray-800 my-6 flex items-center justify-center">
+                    <span class="bg-[var(--deep-black)] px-2 text-xs text-gray-500">營養分析</span>
+                </div>
+
+
+                <!-- 營養數據 Grid -->
+                <div class="grid grid-cols-3 gap-4 text-sm">
+                    <div class="data-cell">
+                        <div class="text-gray-500 text-xs mb-1">熱量</div>
+                        <div class="text-[var(--acid-green)] font-bold text-lg font-mono" id="val-cal">--</div>
+                    </div>
+                    <div class="data-cell">
+                        <div class="text-gray-500 text-xs mb-1">蛋白質</div>
+                        <div class="text-white font-bold text-lg font-mono" id="val-pro">--</div>
+                    </div>
+                    <div class="data-cell">
+                        <div class="text-gray-500 text-xs mb-1">膳食纖維</div>
+                        <div class="text-white font-bold text-lg font-mono" id="val-fib">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </main>
+
+
+    <footer class="mt-auto border-t border-gray-800 p-6 text-center text-xs text-gray-600 font-mono">
+        <p>均衡飲食產生器 v2.0 <span class="text-[var(--acid-green)] mx-2">///</span> 僅供參考</p>
+    </footer>
+
+
+    <script>
+        // 狀態管理
+        let currentState = {
+            time: null,
+            source: null
+        };
+
+
+        // 資料庫：包含菜單名稱與營養估算
+        // 營養數據為估算值，用於展示
+        const menuDatabase = {
+            breakfast: {
+                store: [
+                    { name: "茶葉蛋 2顆 + 蒸地瓜(中) + 無糖黑豆漿", cal: "450 kcal", pro: "22g", fib: "8g" },
+                    { name: "紐奧良風味雞肉三明治 + 熱美式咖啡", cal: "380 kcal", pro: "18g", fib: "3g" },
+                    { name: "無糖希臘優格 + 香蕉1根 + 綜合堅果一包", cal: "320 kcal", pro: "15g", fib: "5g" },
+                    { name: "鮪魚御飯糰 + 石安牧場溏心蛋 + 無糖綠茶", cal: "410 kcal", pro: "16g", fib: "2g" }
+                ],
+                out: [
+                    { name: "鮪魚蛋餅(不加醬油膏) + 無糖溫豆漿", cal: "480 kcal", pro: "24g", fib: "3g" },
+                    { name: "饅頭夾蛋 + 鹹豆漿(不加辣油)", cal: "520 kcal", pro: "20g", fib: "4g" },
+                    { name: "里肌豬排吐司(不抹美乃滋) + 熱紅茶", cal: "400 kcal", pro: "19g", fib: "3g" },
+                    { name: "清粥小菜 (燙青菜x2 + 荷包蛋 + 滷豆腐)", cal: "350 kcal", pro: "18g", fib: "6g" }
+                ],
+                home: [
+                    { name: "燕麥粥(加牛奶/豆漿) + 水煮蛋 + 藍莓", cal: "380 kcal", pro: "16g", fib: "7g" },
+                    { name: "全麥吐司一片 + 酪梨半顆 + 太陽蛋", cal: "420 kcal", pro: "14g", fib: "9g" },
+                    { name: "蔬菜歐姆蛋 (洋蔥/彩椒/蘑菇) + 蘋果", cal: "300 kcal", pro: "15g", fib: "5g" }
+                ]
+            },
+            lunch: {
+                store: [
+                    { name: "健康餐盒(舒肥雞胸/紫米) + 無糖茶", cal: "550 kcal", pro: "35g", fib: "6g" },
+                    { name: "關東煮(白蘿蔔/昆布/娃娃菜/水煮蛋) + 蒸地瓜", cal: "400 kcal", pro: "15g", fib: "10g" },
+                    { name: "日式蕎麥涼麵 + 茶葉蛋 + 雞胸肉隨手包", cal: "480 kcal", pro: "28g", fib: "4g" },
+                    { name: "烤雞腿握便當 + 花園沙拉(和風醬)", cal: "600 kcal", pro: "25g", fib: "5g" }
+                ],
+                out: [
+                    { name: "自助餐 (滷雞腿去皮 + 3樣深色蔬菜 + 半碗糙米飯)", cal: "650 kcal", pro: "30g", fib: "8g" },
+                    { name: "陽春麵(加滷蛋/嘴邊肉) + 燙青菜(不淋肉燥)", cal: "500 kcal", pro: "25g", fib: "5g" },
+                    { name: "SUBWAY (火雞胸肉/全麥麵包/多菜/橄欖油)", cal: "400 kcal", pro: "22g", fib: "6g" },
+                    { name: "小火鍋 (昆布湯底+瘦肉片+大量蔬菜+不喝湯)", cal: "550 kcal", pro: "30g", fib: "12g" }
+                ],
+                home: [
+                    { name: "乾煎鮭魚菲力 + 糙米飯 + 蒜炒花椰菜", cal: "600 kcal", pro: "35g", fib: "7g" },
+                    { name: "雞胸肉溫沙拉 (生菜/番茄/玉米/堅果/油醋)", cal: "450 kcal", pro: "30g", fib: "8g" },
+                    { name: "蒜泥白肉(選瘦肉) + 燙地瓜葉 + 五穀飯", cal: "580 kcal", pro: "25g", fib: "6g" }
+                ]
+            },
+            dinner: {
+                store: [
+                    { name: "一日野菜溫沙拉(配雞肉) + 蒸蛋湯", cal: "350 kcal", pro: "20g", fib: "6g" },
+                    { name: "即食雞胸肉 + 凱薩沙拉(醬減半) + 氣泡水", cal: "320 kcal", pro: "28g", fib: "5g" },
+                    { name: "滷味 (白蘿蔔/杏鮑菇/海帶/腱子肉) 不喝湯", cal: "300 kcal", pro: "25g", fib: "8g" },
+                    { name: "鹽烤鯖魚飯糰 + 毛豆一包", cal: "400 kcal", pro: "20g", fib: "6g" }
+                ],
+                out: [
+                    { name: "潤餅 (不加花生粉/糖粉) + 無糖茶", cal: "350 kcal", pro: "12g", fib: "5g" },
+                    { name: "鹽水雞 (雞胸/小黃瓜/筍片/木耳) 少鹽微辣", cal: "300 kcal", pro: "25g", fib: "7g" },
+                    { name: "鐵板燒 (乾煎雞腿排 + 兩樣青菜) 少油少鹽", cal: "500 kcal", pro: "30g", fib: "6g" },
+                    { name: "夏威夷拌飯 Poke (鮪魚/糙米/酪梨/海帶絲)", cal: "550 kcal", pro: "25g", fib: "8g" }
+                ],
+                home: [
+                    { name: "蔬菜豆腐味噌湯 + 乾煎鯛魚片", cal: "300 kcal", pro: "22g", fib: "4g" },
+                    { name: "清炒蝦仁時蔬 + 少量藜麥飯", cal: "400 kcal", pro: "20g", fib: "5g" },
+                    { name: "櫛瓜麵 Zoodles + 義式蕃茄肉醬", cal: "350 kcal", pro: "18g", fib: "6g" }
+                ]
+            }
+        };
+
+
+        // 介面互動函數
+        function selectTime(time) {
+            currentState.time = time;
+            updateUI('time', time);
+        }
+
+
+        function selectSource(source) {
+            currentState.source = source;
+            updateUI('source', source);
+        }
+
+
+        function updateUI(type, value) {
+            // 移除舊的 active class
+            const typePrefix = type === 'time' ? 'btn-' : 'btn-';
+            // 找出該組所有按鈕
+            const group = type === 'time' 
+                ? ['breakfast', 'lunch', 'dinner'] 
+                : ['store', 'out', 'home'];
+            
+            group.forEach(item => {
+                const btn = document.getElementById(`btn-${item}`);
+                if (item === value) {
+                    btn.classList.add('active');
+                    // 加上酸性邊框效果
+                    if(type === 'source') {
+                        btn.classList.remove('border-gray-600');
+                        btn.classList.add('acid-border', 'border-[var(--acid-green)]');
+                    }
+                } else {
+                    btn.classList.remove('active');
+                    if(type === 'source') {
+                        btn.classList.add('border-gray-600');
+                        btn.classList.remove('acid-border', 'border-[var(--acid-green)]');
+                    }
+                }
+            });
+        }
+
+
+        function generateMenu() {
+            if (!currentState.time || !currentState.source) {
+                // 使用自定義 Alert 效果或簡單的 alert
+                alert("系統提示：請完整選擇「時段」與「來源」以啟動運算");
+                return;
+            }
+
+
+            const options = menuDatabase[currentState.time][currentState.source];
+            const randomChoice = options[Math.floor(Math.random() * options.length)];
+
+
+            const resultContainer = document.getElementById('result-container');
+            const resultMenu = document.getElementById('result-menu');
+            
+            // 標籤更新
+            const timeMap = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐' };
+            const sourceMap = { store: '便利商店', out: '外食/小吃', home: '自己煮' };
+            
+            document.getElementById('result-time-tag').innerText = timeMap[currentState.time];
+            document.getElementById('result-source-tag').innerText = sourceMap[currentState.source];
+            document.getElementById('result-id').innerText = Math.floor(Math.random() * 9000 + 1000);
+
+
+            // 內容更新 (將 + 號高亮)
+            resultMenu.innerHTML = randomChoice.name.replace(/\+/g, '<span class="text-[var(--acid-green)] mx-1">+</span>');
+            
+            // 營養數據更新
+            document.getElementById('val-cal').innerText = randomChoice.cal;
+            document.getElementById('val-pro').innerText = randomChoice.pro;
+            document.getElementById('val-fib').innerText = randomChoice.fib;
+
+
+            // 動畫重置
+            resultContainer.classList.remove('hidden');
+            resultContainer.style.animation = 'none';
+            resultContainer.offsetHeight; /* trigger reflow */
+            resultContainer.style.animation = 'pulse 0.5s ease-out';
+
+
+            // 捲動至結果
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>
